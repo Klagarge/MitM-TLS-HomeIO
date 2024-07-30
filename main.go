@@ -8,9 +8,6 @@ import (
 	"net"
 )
 
-var fakeClient = true
-var fakeServer = true
-
 type discretInput struct {
 	slaveId int
 	address int
@@ -20,7 +17,7 @@ var monitorDiscreteInputs map[discretInput]bool
 var transactions map[int]bool
 
 func main() {
-	var certServ tls.Certificate
+	var certServ *tls.Certificate
 	var err error
 
 	monitorDiscreteInputs = make(map[discretInput]bool)
@@ -30,15 +27,12 @@ func main() {
 	addMonitorDiscreteInput(5, 14, true)
 	addMonitorDiscreteInput(5, 13, true)
 
-	if fakeServer {
-		certServ, err = tls.LoadX509KeyPair("fakeCertificateServer.crt", "fakeCertificateServer.pem")
-	} else {
-		certServ, err = tls.LoadX509KeyPair("HomeIoServerTLS.crt", "private_key_server.pem")
-	}
+	certServ, err = GenerateSelfSignedCertificate("Bender")
+
 	if err != nil {
 		log.Fatalf("bridge: loadkeys: %s", err)
 	}
-	config := tls.Config{Certificates: []tls.Certificate{certServ}}
+	config := tls.Config{Certificates: []tls.Certificate{*certServ}}
 	config.Rand = rand.Reader
 	service := "0.0.0.0:5803"
 	listener, err := tls.Listen("tcp", service, &config)
@@ -60,21 +54,17 @@ func main() {
 func handleClient(clientConn net.Conn) {
 	defer clientConn.Close()
 
-	var clientCert tls.Certificate
+	var clientCert *tls.Certificate
 	var err error
 
-	if fakeClient {
-		clientCert, err = tls.LoadX509KeyPair("fakeCertificateClient.crt", "fakeCertificateClient.pem")
-	} else {
-		clientCert, err = tls.LoadX509KeyPair("HomeIoClientTLS.crt", "private_key_client.pem")
-	}
+	clientCert, err = GenerateSelfSignedCertificate("Bender")
 	if err != nil {
 		log.Printf("bridge: load client keys: %s", err)
 		return
 	}
 
 	tlsConfig := &tls.Config{
-		Certificates:       []tls.Certificate{clientCert},
+		Certificates:       []tls.Certificate{*clientCert},
 		InsecureSkipVerify: true,
 	}
 
@@ -140,7 +130,6 @@ func monitorServerToClient(src net.Conn, dst net.Conn) {
 		transactionId := int(buf[0])<<8 + int(buf[1])
 		_, prs := transactions[transactionId]
 		if prs {
-			//c := buf[8]
 			inputStatus := buf[9]
 			valueToSet := transactions[transactionId]
 			delete(transactions, transactionId)
