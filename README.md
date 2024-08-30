@@ -1,7 +1,7 @@
-# Home IO Packet monitorer
+# Home IO Packet monitorer - Modbus/TLS
 
 This script is used to monitor the packets from Home IO simulation and modified them.
-The [Modbus interface for Home I/O simulation](https://github.com/Klagarge/Modbus2HomeIO) and his [Controller](https://github.com/Klagarge/ControllerHomeIo) have to be used.
+The [Modbus interface for Home I/O simulation](https://github.com/hei-synd-ot-security/Modbus2HomeIO) and his [Controller](https://github.com/Klagarge/ControllerHomeIo) have to be used.
 
 This script have to be run on sudo mode on an MitM environment. (e.g. ARP poisoning with `ettercap`)
 
